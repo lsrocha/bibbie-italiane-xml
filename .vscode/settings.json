@@ -1,0 +1,11 @@
+{
+  "[xml][xsl]": {
+    "editor.defaultFormatter": "redhat.vscode-xml"
+  },
+  "[xml]": {
+    "editor.formatOnSave": false
+  },
+  "[xsl]": {
+    "editor.formatOnSave": true
+  }
+}
