@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet
   version="1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:osis="http://www.bibletechnologies.net/2003/OSIS/namespace"
-  exclude-result-prefixes="osis">
+  xmlns="http://www.bgfdb.de/zefania/2005/namespace"
+  xsi:schemaLocation="http://www.w3.org/1999/XSL/Transform https://raw.githubusercontent.com/eclipse-lemminx/lemminx/refs/heads/main/org.eclipse.lemminx/src/main/resources/schemas/xslt/xslt-1.0.xsd
+                      http://www.bibletechnologies.net/2003/OSIS/namespace https://crosswire.org/osis/osisCore.2.1.1.xsd
+                      http://www.bgfdb.de/zefania/2005/namespace ./zef2005.xsd"
+  exclude-result-prefixes="osis xsi">
 
   <xsl:output method="xml" encoding="UTF-8" indent="yes" />
 
@@ -12,30 +17,32 @@
   </xsl:template>
 
   <xsl:template match="/osis:osis/osis:osisText">
-    <xsl:variable name="work-id" select="@osisIDWork" />
-    <xsl:apply-templates select="osis:header/osis:work[@osisWork=$work-id]" />
-  </xsl:template>
+    <xsl:variable name="work-id" select="@osisIDWork" />  
+  
+    <XMLBIBLE>
+      <xsl:apply-templates select="osis:header/osis:work[@osisWork=$work-id]" />
 
-  <xsl:template match="/osis:osis/osis:osisText/osis:header/osis:work">
-    <XMLBIBLE biblename="{osis:title}">
-      <xsl:call-template name="information" />
-
-      <xsl:call-template name="books">
-        <xsl:with-param name="work-id">
-          <xsl:value-of select="@osisWork" />
-        </xsl:with-param>
-      </xsl:call-template>
+      <xsl:for-each select="osis:div[@type='book']">
+        <xsl:call-template
+          name="book" />
+      </xsl:for-each>
     </XMLBIBLE>
   </xsl:template>
 
-  <xsl:template name="books">
-    <xsl:param name="work-id" />
-    <xsl:for-each select="/osis:osis/osis:osisText[@osisIDWork=$work-id]/osis:div[@type='book']">
-      <BIBLEBOOK bnumber="{position()}">
-        <xsl:call-template name="book-name-attributes" />
-        <CHAPTER />
-      </BIBLEBOOK>
-    </xsl:for-each>
+  <xsl:template match="osis:work">
+    <xsl:attribute name="biblename">
+      <xsl:value-of select="osis:title"></xsl:value-of>
+    </xsl:attribute>
+
+    <xsl:call-template
+      name="information" />
+  </xsl:template>
+
+  <xsl:template name="book">
+    <BIBLEBOOK bnumber="{position()}">
+      <xsl:call-template name="book-name-attributes" />
+      <CHAPTER />
+    </BIBLEBOOK>
   </xsl:template>
 
   <xsl:template name="book-name-attributes">
@@ -46,7 +53,8 @@
             <xsl:value-of select="osis:title/@short" />
           </xsl:attribute>
         </xsl:if>
-        <xsl:attribute name="bname">
+        <xsl:attribute
+          name="bname">
           <xsl:value-of select="osis:title" />
         </xsl:attribute>
       </xsl:when>
@@ -136,7 +144,8 @@
       </xsl:when>
       <xsl:when test="@osisID='Song'">
         <xsl:attribute name="bsname">Ca</xsl:attribute>
-        <xsl:attribute name="bname">Cantico dei Cantici</xsl:attribute>
+        <xsl:attribute name="bname">Cantico dei
+    Cantici</xsl:attribute>
       </xsl:when>
       <xsl:when test="@osisID='Isa'">
         <xsl:attribute name="bsname">Is</xsl:attribute>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://www.bgfdb.de/zefania/2005/namespace"
+  targetNamespace="http://www.bgfdb.de/zefania/2005/namespace"
+  elementFormDefault="qualified">
+  <xs:include schemaLocation="https://raw.githubusercontent.com/biblenerd/Zefania-XML-Preservation/refs/heads/main/zef2005.xsd" />
+</xs:schema>
