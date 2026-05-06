@@ -13,49 +13,69 @@
   <xsl:output method="xml" encoding="UTF-8" indent="yes" />
 
   <xsl:template match="/">
-    <xsl:apply-templates select="osis:osis/osis:osisText[@osisRefWork='Bible']" />
+    <xsl:apply-templates select="/osis:osis/osis:osisText[@osisRefWork='Bible']" />
   </xsl:template>
 
   <xsl:template match="/osis:osis/osis:osisText">
-    <xsl:variable name="work-id" select="@osisIDWork" />  
+    <xsl:variable name="work-id" select="./@osisIDWork" />
   
-    <XMLBIBLE>
-      <xsl:apply-templates select="osis:header/osis:work[@osisWork=$work-id]" />
+    <xmlbible>
+      <xsl:apply-templates select="./osis:header/osis:work[@osisWork=$work-id]" />
 
-      <xsl:for-each select="osis:div[@type='book']">
-        <xsl:call-template
-          name="book" />
+      <xsl:for-each select="./osis:div[@type='book']">
+        <xsl:variable name="book-id" select="./@osisID" />
+
+        <biblebook bnumber="{position()}">
+          <xsl:call-template name="book-name-attributes" />
+
+          <xsl:for-each select="osis:chapter[starts-with(@osisID, concat($book-id, '.'))]">
+            <xsl:call-template name="chapter" />
+          </xsl:for-each>
+        </biblebook>
       </xsl:for-each>
-    </XMLBIBLE>
+    </xmlbible>
+  </xsl:template>
+
+  <xsl:template name="chapter">
+    <xsl:variable name="chapter-id" select="./@osisID" />
+    <chapter cnumber="{position()}">
+      <xsl:for-each select="osis:verse[starts-with(@osisID, concat($chapter-id, '.'))]">
+        <vers vnumber="{position()}">
+          <xsl:for-each select="./text()">
+            <xsl:choose>
+              <xsl:when test="position() = 1">
+                <xsl:value-of select="." />
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="concat(' ', .)" />
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:for-each>
+        </vers>
+      </xsl:for-each>
+    </chapter>
   </xsl:template>
 
   <xsl:template match="osis:work">
     <xsl:attribute name="biblename">
-      <xsl:value-of select="osis:title"></xsl:value-of>
+      <xsl:value-of select="osis:title" />
     </xsl:attribute>
 
     <xsl:call-template
       name="information" />
   </xsl:template>
 
-  <xsl:template name="book">
-    <BIBLEBOOK bnumber="{position()}">
-      <xsl:call-template name="book-name-attributes" />
-      <CHAPTER />
-    </BIBLEBOOK>
-  </xsl:template>
-
   <xsl:template name="book-name-attributes">
     <xsl:choose>
-      <xsl:when test="osis:title">
-        <xsl:if test="string-length(osis:title/@short) > 0">
+      <xsl:when test="./osis:title">
+        <xsl:if test="string-length(./osis:title/@short) > 0">
           <xsl:attribute name="bsname">
-            <xsl:value-of select="osis:title/@short" />
+            <xsl:value-of select="./osis:title/@short" />
           </xsl:attribute>
         </xsl:if>
         <xsl:attribute
           name="bname">
-          <xsl:value-of select="osis:title" />
+          <xsl:value-of select="./osis:title" />
         </xsl:attribute>
       </xsl:when>
       <xsl:when test="@osisID='Gen'">
