@@ -19,45 +19,90 @@
   <xsl:template match="osis:osisText">
     <xsl:variable name="work-id" select="./@osisIDWork" />
 
-    <xmlbible>
+    <XMLBIBLE>
       <!-- medatada -->
       <xsl:apply-templates select="./osis:header/osis:work[@osisWork=$work-id]" />
 
       <!-- books -->
       <xsl:apply-templates select="./osis:div[@type='book']" />
-    </xmlbible>
+    </XMLBIBLE>
   </xsl:template>
 
   <xsl:template match="osis:div[@type='book']">
     <xsl:variable name="book-id" select="./@osisID" />
 
-    <biblebook bnumber="{position()}">
+    <BIBLEBOOK bnumber="{position()}">
       <xsl:call-template name="book-name-attributes" />
       <xsl:apply-templates select="osis:chapter[starts-with(@osisID, concat($book-id, '.'))]" />
-    </biblebook>
+    </BIBLEBOOK>
   </xsl:template>
 
   <xsl:template match="osis:chapter">
     <xsl:variable name="chapter-id" select="./@osisID" />
 
-    <chapter cnumber="{position()}">
+    <CHAPTER cnumber="{position()}">
       <xsl:apply-templates select="osis:verse[starts-with(@osisID, concat($chapter-id, '.'))]" />
-    </chapter>
+    </CHAPTER>
   </xsl:template>
 
   <xsl:template match="osis:verse">
-    <vers vnumber="{position()}">
-      <xsl:for-each select="./text()">
+    <xsl:variable name="verse-number" select="position()" />
+
+    <xsl:apply-templates select="osis:head">
+      <xsl:with-param name="verse-number" select="$verse-number" />
+    </xsl:apply-templates>
+
+    <VERS
+      vnumber="{$verse-number}">
+      <xsl:for-each select="./node()">
         <xsl:choose>
-          <xsl:when test="position() = 1">
+          <xsl:when test="self::text()">
             <xsl:value-of select="." />
           </xsl:when>
-          <xsl:otherwise>
-            <xsl:value-of select="concat(' ', .)" />
-          </xsl:otherwise>
+          <!-- Isaia 22.1 -->
+          <!-- <head></head><p eID="1" /><p sID="1" /> -->
+          <!-- <xsl:when test="self::p[@eID]"> -->
+          <!-- convert <p eID="1" /><p sID="1" /> -->
+          <xsl:when test="self::osis:p[preceding-sibling::osis:head]">
+            <!-- SKIP -->
+          </xsl:when>
+          <xsl:when test="self::osis:p[@eID]">
+            <BR art="x-p" />
+          </xsl:when>
+          <!-- See:
+            https://github.com/LPN6/LaParola/blob/main/Codice%20sorgente/Windows/LaParola/ImportaBibbia.cs -->
+          <!-- <br art="x-p" /> -->
+          <!-- </xsl:when> -->
+          <xsl:when test="self::osis:q">
+            <STYLE fs="italic">
+              <xsl:value-of select="./text()" />
+            </STYLE>
+          </xsl:when>
         </xsl:choose>
       </xsl:for-each>
-    </vers>
+    </VERS>
+  </xsl:template>
+
+  <xsl:template match="osis:head">
+    <xsl:param name="verse-number" />
+
+    <CAPTION vref="{$verse-number}">
+      <xsl:for-each select="./node()">
+        <xsl:choose>
+          <xsl:when test="self::text()">
+            <xsl:value-of select="." />
+          </xsl:when>
+          <xsl:when test="self::osis:p[@eID]">
+            <BR art="x-p" />
+          </xsl:when>
+          <xsl:when test="self::osis:q">
+            <STYLE fs="italic">
+              <xsl:value-of select="./text()" />
+            </STYLE>
+          </xsl:when>
+        </xsl:choose>
+      </xsl:for-each>
+    </CAPTION>
   </xsl:template>
 
   <xsl:template match="osis:work">
