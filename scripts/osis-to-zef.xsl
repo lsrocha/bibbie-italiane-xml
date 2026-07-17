@@ -59,20 +59,14 @@
           <xsl:when test="self::text()">
             <xsl:value-of select="." />
           </xsl:when>
-          <!-- Isaia 22.1 -->
-          <!-- <head></head><p eID="1" /><p sID="1" /> -->
-          <!-- <xsl:when test="self::p[@eID]"> -->
-          <!-- convert <p eID="1" /><p sID="1" /> -->
           <xsl:when test="self::osis:p[preceding-sibling::osis:head]">
-            <!-- SKIP -->
+            <!-- SKIP <p> that follows a <head> to prevent trailing spaces (e.g. Isaia 22.1) -->
           </xsl:when>
-          <xsl:when test="self::osis:p[@eID]">
+          <xsl:when test="self::osis:p[@sID] and position() != last()">
+            <!-- Based on
+            https://github.com/LPN6/LaParola/blob/f99b5d74703f2edb6ff12b82fa5011f8f930129d/Codice%20sorgente/Windows/LaParola/ImportaBibbia.cs#L2214 -->
             <BR art="x-p" />
           </xsl:when>
-          <!-- See:
-            https://github.com/LPN6/LaParola/blob/main/Codice%20sorgente/Windows/LaParola/ImportaBibbia.cs -->
-          <!-- <br art="x-p" /> -->
-          <!-- </xsl:when> -->
           <xsl:when test="self::osis:q">
             <STYLE fs="italic">
               <xsl:value-of select="./text()" />
@@ -92,7 +86,7 @@
           <xsl:when test="self::text()">
             <xsl:value-of select="." />
           </xsl:when>
-          <xsl:when test="self::osis:p[@eID]">
+          <xsl:when test="self::osis:p[@sID]">
             <BR art="x-p" />
           </xsl:when>
           <xsl:when test="self::osis:q">
@@ -110,14 +104,66 @@
       <xsl:value-of select="osis:title" />
     </xsl:attribute>
 
-    <xsl:call-template
-      name="information" />
+    <INFORMATION>
+      <xsl:apply-templates select="./node()[local-name()='title']" />
+      <xsl:apply-templates select="./node()[local-name()='type']" />
+      <xsl:apply-templates select="./node()[local-name()='description']" />
+      <xsl:apply-templates select="./node()[local-name()='subject']" />
+
+      <xsl:choose>
+        <xsl:when test="./node()[local-name()='identifier' and @type='OSIS']">
+          <xsl:apply-templates select="./node()[local-name()='identifier']" />
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:apply-templates select="./node()[local-name()='identifier'][1]" />
+        </xsl:otherwise>
+      </xsl:choose>
+
+      <xsl:choose>
+        <xsl:when test="./node()[local-name()='date' and @type='eversion']">
+          <xsl:apply-templates select="./node()[local-name()='date' and @type='eversion']" />
+        </xsl:when>
+        <xsl:when test="./node()[local-name()='date' and @type='edition']">
+          <xsl:apply-templates select="./node()[local-name()='date' and @type='edition']" />
+        </xsl:when>
+        <xsl:when test="./node()[local-name()='date' and @type='imprint']">
+          <xsl:apply-templates select="./node()[local-name()='date' and @type='imprint']" />
+        </xsl:when>
+        <xsl:when test="./node()[local-name()='date' and @type='original']">
+          <xsl:apply-templates select="./node()[local-name()='date' and @type='original']" />
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:apply-templates select="./node()[local-name()='date' and not(@type)][1]" />
+        </xsl:otherwise>
+      </xsl:choose>
+
+      <xsl:apply-templates select="./node()[local-name()='publisher']" />
+      <xsl:apply-templates select="./node()[local-name()='language'][1]" />
+      <xsl:apply-templates select="./node()[local-name()='coverage']" />
+      <xsl:apply-templates select="./node()[local-name()='rights']" />
+      <xsl:apply-templates select="./node()[local-name()='contributor']">
+        <xsl:with-param name="element-name">contributors</xsl:with-param>
+      </xsl:apply-templates>
+      <format>Zefania XML Bible Markup Language</format>
+      <creator>https://github.com/lsrocha/bibbie-italiane-xml</creator>
+      <source>https://github.com/LPN6/LaParola</source>
+    </INFORMATION>
+  </xsl:template>
+
+  <xsl:template match="osis:work/node()">
+    <xsl:param name="element-name" select="local-name()" />
+
+    <xsl:if test="text()">
+      <xsl:element name="{$element-name}">
+        <xsl:value-of select="." />
+      </xsl:element>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template name="book-name-attributes">
     <xsl:choose>
       <xsl:when test="./osis:title">
-        <xsl:if test="string-length(./osis:title/@short) > 0">
+        <xsl:if test="./osis:title[@short]">
           <xsl:attribute name="bsname">
             <xsl:value-of select="./osis:title/@short" />
           </xsl:attribute>
@@ -213,8 +259,7 @@
       </xsl:when>
       <xsl:when test="@osisID='Song'">
         <xsl:attribute name="bsname">Ca</xsl:attribute>
-        <xsl:attribute name="bname">Cantico dei
-    Cantici</xsl:attribute>
+        <xsl:attribute name="bname">Cantico dei Cantici</xsl:attribute>
       </xsl:when>
       <xsl:when test="@osisID='Isa'">
         <xsl:attribute name="bsname">Is</xsl:attribute>
@@ -393,84 +438,5 @@
         <xsl:attribute name="bname">Apocalisse</xsl:attribute>
       </xsl:when>
     </xsl:choose>
-  </xsl:template>
-
-  <xsl:template name="information">
-    <INFORMATION>
-      <!-- TODO: use xsl:copy -->
-      <title>
-        <xsl:value-of select="osis:title" />
-      </title>
-
-      <identifier>
-        <xsl:value-of select="osis:identifier" />
-      </identifier>
-
-      <language>
-        <xsl:value-of select="osis:language" />
-      </language>
-
-      <format>Zefania XML Bible Markup Language</format>
-
-      <xsl:if test="osis:type">
-        <type>
-          <xsl:value-of select="osis:type" />
-        </type>
-      </xsl:if>
-
-      <xsl:if test="osis:description">
-        <description>
-          <xsl:value-of select="osis:description" />
-        </description>
-      </xsl:if>
-
-      <xsl:if test="osis:subject">
-        <subject>
-          <xsl:value-of select="osis:subject" />
-        </subject>
-      </xsl:if>
-
-      <xsl:if test="osis:date">
-        <date>
-          <xsl:value-of select="osis:date" />
-        </date>
-      </xsl:if>
-
-      <xsl:if test="osis:source">
-        <source>
-          <xsl:value-of select="osis:source" />
-        </source>
-      </xsl:if>
-
-      <xsl:if test="osis:coverage">
-        <coverage>
-          <xsl:value-of select="osis:coverage" />
-        </coverage>
-      </xsl:if>
-
-      <xsl:if test="osis:rights">
-        <rights>
-          <xsl:value-of select="osis:rights" />
-        </rights>
-      </xsl:if>
-
-      <xsl:for-each select="osis:creator[string-length(text()) > 0]">
-        <creator>
-          <xsl:value-of select="." />
-        </creator>
-      </xsl:for-each>
-
-      <xsl:for-each select="osis:contributor[string-length(text()) > 0]">
-        <contributors>
-          <xsl:value-of select="." />
-        </contributors>
-      </xsl:for-each>
-
-      <xsl:if test="osis:publisher">
-        <publisher>
-          <xsl:value-of select="osis:publisher" />
-        </publisher>
-      </xsl:if>
-    </INFORMATION>
   </xsl:template>
 </xsl:stylesheet>

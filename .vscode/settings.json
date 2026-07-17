@@ -7,5 +7,7 @@
   },
   "[xsl]": {
     "editor.formatOnSave": true
-  }
+  },
+  "xml.format.emptyElements": "collapse",
+  "xml.format.maxLineWidth": 120
 }
