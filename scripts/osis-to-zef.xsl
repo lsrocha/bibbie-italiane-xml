@@ -46,9 +46,11 @@
   </xsl:template>
 
   <xsl:template match="osis:verse">
+    <!-- TODO: use @osisID to generate verse number -->
     <xsl:variable name="verse-number" select="position()" />
 
-    <xsl:apply-templates select="osis:head">
+    <xsl:apply-templates
+      select="osis:head">
       <xsl:with-param name="verse-number" select="$verse-number" />
     </xsl:apply-templates>
 
@@ -90,6 +92,7 @@
             <BR art="x-p" />
           </xsl:when>
           <xsl:when test="self::osis:q">
+            <!-- TODO: support other child types (e.g. <title>) -->
             <STYLE fs="italic">
               <xsl:value-of select="./text()" />
             </STYLE>
