@@ -50,7 +50,6 @@
   <xsl:template match="osis:verse">
     <xsl:param name="chapter-id" />
 
-    <!-- TODO: use @osisID to generate verse number -->
     <xsl:variable name="verse-number"
       select="substring-after(@osisID, concat($chapter-id, '.'))" />
 
@@ -88,22 +87,7 @@
     <xsl:param name="verse-number" />
 
     <CAPTION vref="{$verse-number}">
-      <xsl:for-each select="./node()">
-        <xsl:choose>
-          <xsl:when test="self::text()">
-            <xsl:value-of select="." />
-          </xsl:when>
-          <xsl:when test="self::osis:p[@sID]">
-            <BR art="x-p" />
-          </xsl:when>
-          <xsl:when test="self::osis:q">
-            <!-- TODO: support other child types (e.g. <title>) -->
-            <STYLE fs="italic">
-              <xsl:value-of select="./text()" />
-            </STYLE>
-          </xsl:when>
-        </xsl:choose>
-      </xsl:for-each>
+      <xsl:call-template name="convert-child-content" />
     </CAPTION>
   </xsl:template>
 
@@ -166,6 +150,32 @@
         <xsl:value-of select="." />
       </xsl:element>
     </xsl:if>
+  </xsl:template>
+
+  <xsl:template name="convert-child-content">
+    <xsl:for-each select="./node()">
+      <xsl:choose>
+        <xsl:when test="self::text()">
+          <xsl:value-of select="." />
+        </xsl:when>
+        <xsl:when test="self::osis:title">
+          <xsl:value-of select="./text()" />
+        </xsl:when>
+        <xsl:when test="self::osis:p[preceding-sibling::osis:head]">
+          <!-- SKIP <p> that follows a <head> to prevent trailing spaces (e.g. Isaia 22.1) -->
+        </xsl:when>
+        <xsl:when test="self::osis:p[@sID] and position() != last()">
+          <!-- Based on
+          https://github.com/LPN6/LaParola/blob/f99b5d74703f2edb6ff12b82fa5011f8f930129d/Codice%20sorgente/Windows/LaParola/ImportaBibbia.cs#L2214 -->
+            <BR art="x-p" />
+        </xsl:when>
+        <xsl:when test="self::osis:q">
+          <STYLE fs="italic">
+            <xsl:call-template name="convert-child-content" />
+          </STYLE>
+        </xsl:when>
+      </xsl:choose>
+    </xsl:for-each>
   </xsl:template>
 
   <xsl:template name="book-name-attributes">
