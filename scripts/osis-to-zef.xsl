@@ -41,13 +41,18 @@
     <xsl:variable name="chapter-id" select="./@osisID" />
 
     <CHAPTER cnumber="{position()}">
-      <xsl:apply-templates select="osis:verse[starts-with(@osisID, concat($chapter-id, '.'))]" />
+      <xsl:apply-templates select="osis:verse[starts-with(@osisID, concat($chapter-id, '.'))]">
+        <xsl:with-param name="chapter-id" select="$chapter-id" />
+      </xsl:apply-templates>
     </CHAPTER>
   </xsl:template>
 
   <xsl:template match="osis:verse">
+    <xsl:param name="chapter-id" />
+
     <!-- TODO: use @osisID to generate verse number -->
-    <xsl:variable name="verse-number" select="position()" />
+    <xsl:variable name="verse-number"
+      select="substring-after(@osisID, concat($chapter-id, '.'))" />
 
     <xsl:apply-templates
       select="osis:head">
