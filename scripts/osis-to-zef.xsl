@@ -24,7 +24,7 @@
       <xsl:apply-templates select="./osis:header/osis:work[@osisWork=$work-id]" />
 
       <!-- books -->
-      <xsl:apply-templates select="./osis:div[@type='book']" />
+      <xsl:apply-templates select=".//osis:div[@type='book']" />
     </XMLBIBLE>
   </xsl:template>
 
@@ -40,7 +40,7 @@
   <xsl:template match="osis:chapter">
     <xsl:variable name="chapter-id" select="./@osisID" />
 
-    <CHAPTER cnumber="{position()}">
+    <CHAPTER cnumber="{substring-after($chapter-id, '.')}">
       <xsl:apply-templates select="osis:verse[starts-with(@osisID, concat($chapter-id, '.'))]">
         <xsl:with-param name="chapter-id" select="$chapter-id" />
       </xsl:apply-templates>
@@ -85,7 +85,7 @@
 
       <xsl:choose>
         <xsl:when test="./node()[local-name()='identifier' and @type='OSIS']">
-          <xsl:apply-templates select="./node()[local-name()='identifier']" />
+          <xsl:apply-templates select="./node()[local-name()='identifier' and @type='OSIS']" />
         </xsl:when>
         <xsl:otherwise>
           <xsl:apply-templates select="./node()[local-name()='identifier'][1]" />
@@ -146,9 +146,7 @@
           <!-- SKIP <p> that follows a <head> to prevent trailing spaces (e.g. Isaia 22.1) -->
         </xsl:when>
         <xsl:when test="self::osis:p[@sID] and position() != last()">
-          <!-- Based on
-          https://github.com/LPN6/LaParola/blob/f99b5d74703f2edb6ff12b82fa5011f8f930129d/Codice%20sorgente/Windows/LaParola/ImportaBibbia.cs#L2214 -->
-            <BR art="x-p" />
+          <xsl:text> </xsl:text>
         </xsl:when>
         <xsl:when test="self::osis:q">
           <STYLE fs="italic">
