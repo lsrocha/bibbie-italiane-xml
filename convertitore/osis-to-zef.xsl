@@ -20,7 +20,7 @@
     <xsl:variable name="work-id" select="./@osisIDWork" />
 
     <XMLBIBLE>
-      <!-- medatada -->
+      <!-- metadata -->
       <xsl:apply-templates select="./osis:header/osis:work[@osisWork=$work-id]" />
 
       <!-- books -->
@@ -53,13 +53,11 @@
     <xsl:variable name="verse-number"
       select="substring-after(@osisID, concat($chapter-id, '.'))" />
 
-    <xsl:apply-templates
-      select="osis:head">
+    <xsl:apply-templates select="osis:head">
       <xsl:with-param name="verse-number" select="$verse-number" />
     </xsl:apply-templates>
 
-    <VERS
-      vnumber="{$verse-number}">
+    <VERS vnumber="{$verse-number}">
       <xsl:call-template name="convert-child-content" />
     </VERS>
   </xsl:template>
@@ -79,9 +77,9 @@
 
     <INFORMATION>
       <xsl:apply-templates select="./node()[local-name()='title']" />
-      <xsl:apply-templates select="./node()[local-name()='type']" />
+      <xsl:apply-templates select="./node()[local-name()='type'][1]" />
       <xsl:apply-templates select="./node()[local-name()='description']" />
-      <xsl:apply-templates select="./node()[local-name()='subject']" />
+      <xsl:apply-templates select="./node()[local-name()='subject'][1]" />
 
       <xsl:choose>
         <xsl:when test="./node()[local-name()='identifier' and @type='OSIS']">
@@ -165,8 +163,7 @@
             <xsl:value-of select="./osis:title/@short" />
           </xsl:attribute>
         </xsl:if>
-        <xsl:attribute
-          name="bname">
+        <xsl:attribute name="bname">
           <xsl:value-of select="./osis:title" />
         </xsl:attribute>
       </xsl:when>

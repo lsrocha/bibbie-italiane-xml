@@ -4,5 +4,5 @@
   xmlns="http://www.bgfdb.de/zefania/2005/namespace"
   targetNamespace="http://www.bgfdb.de/zefania/2005/namespace"
   elementFormDefault="qualified">
-  <xs:include schemaLocation="https://raw.githubusercontent.com/biblenerd/Zefania-XML-Preservation/refs/heads/main/zef2005.xsd" />
+  <xs:include schemaLocation="https://raw.githubusercontent.com/biblenerd/Zefania-XML-Preservation/2cabdfde496ce9df4f62182b9f2ca077d73443ec/zef2005.xsd" />
 </xs:schema>
